@@ -1,0 +1,25 @@
+{
+  "name": "퍼스트 제품 갤러리",
+  "short_name": "FIRST갤러리",
+  "description": "퍼스트바리스타·제과제빵학원 제품 사진 갤러리",
+  "start_url": "/first-gallery/",
+  "scope": "/first-gallery/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e8612a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
