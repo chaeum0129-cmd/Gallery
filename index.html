@@ -81,11 +81,11 @@ window.addEventListener('appinstalled', () => banner.classList.remove('show'));
 <script>
 const LOGO_B64 = "data:image/png;base64,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";
 const TEACHERS_DEFAULT = [
-  { id:"all", name:"전체 보기", emoji:"🏫" },
-  { id:"t1",  name:"김선생님",  emoji:"👩‍🍳" },
-  { id:"t2",  name:"이선생님",  emoji:"👨‍🍳" },
-  { id:"t3",  name:"박선생님",  emoji:"👩‍🍳" },
-  { id:"t4",  name:"최선생님",  emoji:"👨‍🍳" },
+  { id:"all", name:"전체" },
+  { id:"t1", name:"김" },
+  { id:"t2", name:"이" },
+  { id:"t3", name:"박" },
+  { id:"t4", name:"최" },
 ];
 const TEACHER_KEY = "first_teachers_v1";
 const MAX_MB = 10;
@@ -153,6 +153,7 @@ function App(){
   const [uploadingTeacher,setUploadingTeacher] = useState("t1");
   const [newTeacherName,setNewTeacherName] = useState("");
   const [addingTeacher,setAddingTeacher]   = useState(false);
+  const [editingTeacher,setEditingTeacher] = useState(null); // {id, name}
   const [managingTeachers,setManagingTeachers] = useState(false);
   const [deleteConfirm,setDeleteConfirm]   = useState(null);
   const [selectedIds,setSelectedIds]       = useState(new Set());
@@ -241,8 +242,8 @@ function App(){
   const clearSel=()=>{setSelectedIds(new Set());setSelectionMode(false);};
   const addTeacher=()=>{
     if(!newTeacherName.trim()) return;
-    const id="t"+Date.now(),emoji=["👩‍🍳","👨‍🍳","🧑‍🍳"][teachers.length%3];
-    const updated=[...teachers,{id,name:newTeacherName.trim()+"선생님",emoji}];
+    const id="t"+Date.now();
+    const updated=[...teachers,{id,name:newTeacherName.trim()}];
     setTeachers(updated); saveTeachers(updated);
     setNewTeacherName(""); setAddingTeacher(false); setUploadingTeacher(id);
   };
@@ -251,6 +252,12 @@ function App(){
     setTeachers(updated); saveTeachers(updated);
     if(selTeacher===tid) setSelTeacher("all");
     setDeleteConfirm(null);
+  };
+  const renameTeacher=()=>{
+    if(!editingTeacher||!editingTeacher.name.trim()) return;
+    const updated=teachers.map(t=>t.id===editingTeacher.id?{...t,name:editingTeacher.name.trim()}:t);
+    setTeachers(updated); saveTeachers(updated);
+    setEditingTeacher(null);
   };
   const getTName=(tid)=>teachers.find(t=>t.id===tid)?.name||"알 수 없음";
   const nonAll=teachers.filter(t=>t.id!=="all");
@@ -357,30 +364,46 @@ function App(){
     React.createElement("div",{style:{maxWidth:760,margin:"0 auto",padding:"1.25rem 1rem 5rem"}},
       // 선생님 관리 버튼
       React.createElement("div",{style:{display:"flex",justifyContent:"flex-end",marginBottom:"1rem"}},
-        React.createElement(Btn,{onClick:()=>setManagingTeachers(!managingTeachers),active:managingTeachers},"⚙ 선생님 관리")
+        React.createElement(Btn,{onClick:()=>setManagingTeachers(!managingTeachers),active:managingTeachers},"⚙ 강사 관리")
       ),
       // 선생님 관리 패널
       managingTeachers&&React.createElement("div",{style:{background:C.white,border:"1px solid "+C.line,padding:"1.25rem",marginBottom:"1.25rem"}},
-        React.createElement("p",{style:{fontSize:14,fontWeight:700,margin:"0 0 14px",color:C.black,borderLeft:"3px solid "+C.coral,paddingLeft:10}},"선생님 목록"),
+        React.createElement("p",{style:{fontSize:14,fontWeight:700,margin:"0 0 14px",color:C.black,borderLeft:"3px solid "+C.coral,paddingLeft:10}},"강사 목록"),
         nonAll.map(t=>React.createElement("div",{key:t.id,style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid "+C.line}},
-          React.createElement("span",{style:{fontSize:13,color:C.charcoal}},t.emoji+" "+t.name+" ("+images.filter(i=>i.teacherId===t.id).length+"장)"),
-          deleteConfirm===t.id
-            ?React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
-              React.createElement("span",{style:{fontSize:12,color:C.coral}},"삭제?"),
-              React.createElement("button",{onClick:()=>deleteTeacher(t.id),style:{fontSize:12,padding:"3px 10px",background:C.coral,color:"#fff",border:"none",cursor:"pointer"}},"삭제"),
-              React.createElement("button",{onClick:()=>setDeleteConfirm(null),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
+          editingTeacher&&editingTeacher.id===t.id
+            // 수정 모드
+            ?React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center",flex:1}},
+              React.createElement("input",{value:editingTeacher.name,autoFocus:true,
+                onChange:e=>setEditingTeacher({...editingTeacher,name:e.target.value}),
+                onKeyDown:e=>e.key==="Enter"&&renameTeacher(),
+                style:{flex:1,fontSize:13,padding:"5px 8px",border:"1px solid "+C.coral,outline:"none",borderRadius:3}}),
+              React.createElement("button",{onClick:renameTeacher,style:{fontSize:12,padding:"4px 10px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",borderRadius:3,fontWeight:700}},"저장"),
+              React.createElement("button",{onClick:()=>setEditingTeacher(null),style:{fontSize:12,padding:"4px 10px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer",borderRadius:3}},"취소")
             )
-            :React.createElement("button",{onClick:()=>setDeleteConfirm(t.id),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,color:C.gray,cursor:"pointer"}},"삭제")
+            // 일반 모드
+            :React.createElement(React.Fragment,null,
+              React.createElement("span",{style:{fontSize:13,color:C.charcoal}},t.name+" (+images.filter(i=>i.teacherId===t.id).length+"장)"),
+              deleteConfirm===t.id
+                ?React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
+                  React.createElement("span",{style:{fontSize:12,color:C.coral}},"삭제?"),
+                  React.createElement("button",{onClick:()=>deleteTeacher(t.id),style:{fontSize:12,padding:"3px 10px",background:C.coral,color:"#fff",border:"none",cursor:"pointer"}},"삭제"),
+                  React.createElement("button",{onClick:()=>setDeleteConfirm(null),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
+                )
+                :React.createElement("div",{style:{display:"flex",gap:5}},
+                  React.createElement("button",{onClick:()=>setEditingTeacher({id:t.id,name:t.name}),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,color:C.gray,cursor:"pointer"}},"✏️ 수정"),
+                  React.createElement("button",{onClick:()=>setDeleteConfirm(t.id),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,color:C.gray,cursor:"pointer"}},"삭제")
+                )
+            )
         )),
         addingTeacher
           ?React.createElement("div",{style:{display:"flex",gap:8,marginTop:12}},
-            React.createElement("input",{placeholder:"선생님 이름",value:newTeacherName,onChange:e=>setNewTeacherName(e.target.value),
+            React.createElement("input",{placeholder:"강사 이름 입력",value:newTeacherName,onChange:e=>setNewTeacherName(e.target.value),
               onKeyDown:e=>e.key==="Enter"&&addTeacher(),autoFocus:true,
               style:{flex:1,fontSize:13,padding:"7px 10px",border:"1px solid "+C.line,outline:"none"}}),
             React.createElement("button",{onClick:addTeacher,style:{fontSize:13,padding:"7px 16px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:700}},"추가"),
             React.createElement("button",{onClick:()=>{setAddingTeacher(false);setNewTeacherName("");},style:{fontSize:13,padding:"7px 12px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
           )
-          :React.createElement("button",{onClick:()=>setAddingTeacher(true),style:{marginTop:12,fontSize:13,display:"flex",alignItems:"center",gap:5,background:"none",border:"1px dashed "+C.coral,color:C.coral,padding:"7px 14px",cursor:"pointer"}},"+ 선생님 추가")
+          :React.createElement("button",{onClick:()=>setAddingTeacher(true),style:{marginTop:12,fontSize:13,display:"flex",alignItems:"center",gap:5,background:"none",border:"1px dashed "+C.coral,color:C.coral,padding:"7px 14px",cursor:"pointer"}},"+ 강사 추가")
       ),
 
       // 업로드 존
@@ -403,10 +426,10 @@ function App(){
             React.createElement("p",{style:{fontSize:14,color:dragging?C.coral:C.gray,margin:0,fontWeight:600,textAlign:"center"}},"사진을 탭하여 갤러리에서 선택"),
             React.createElement("p",{style:{fontSize:11,color:C.grayMid,margin:0,textAlign:"center"}},"최대 "+MAX_MB+"MB · 자동 압축 · 모든 기기에서 실시간 공유"),
             React.createElement("div",{onClick:e=>e.stopPropagation(),style:{display:"flex",alignItems:"center",gap:8}},
-              React.createElement("span",{style:{fontSize:13,color:C.gray}},"선생님:"),
+              React.createElement("span",{style:{fontSize:13,color:C.gray}},"강사:"),
               React.createElement("select",{value:uploadingTeacher,onChange:e=>setUploadingTeacher(e.target.value),
                 style:{fontSize:13,padding:"6px 12px",border:"1px solid "+C.line,background:C.white,outline:"none"}},
-                nonAll.map(t=>React.createElement("option",{key:t.id,value:t.id},t.emoji+" "+t.name))
+                nonAll.map(t=>React.createElement("option",{key:t.id,value:t.id},t.name))
               )
             )
           ),
@@ -442,7 +465,7 @@ function App(){
               background:"none",color:active?C.coral:C.gray,border:"none",
               borderBottom:active?"2px solid "+C.coral:"2px solid transparent",
               marginBottom:-2,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}},
-            t.emoji+" "+t.name,
+            t.name,
             React.createElement("span",{style:{fontSize:11,background:active?C.coral:C.bg,color:active?"#fff":C.grayMid,borderRadius:10,padding:"1px 7px",fontWeight:700}},count)
           );
         })
@@ -454,7 +477,7 @@ function App(){
           style:{fontSize:12,padding:"7px 10px",border:"1px solid "+C.line,background:C.white,outline:"none"}},
           React.createElement("option",{value:"date-desc"},"최신순"),
           React.createElement("option",{value:"date-asc"},"오래된순"),
-          React.createElement("option",{value:"teacher"},"선생님순"),
+          React.createElement("option",{value:"teacher"},"강사순"),
           React.createElement("option",{value:"status"},"사용상태순")
         ),
         React.createElement(Btn,{onClick:()=>setGroupByDate(!groupByDate),active:groupByDate},"📅 날짜별"),
