@@ -1,48 +1,118 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#e8612a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="FIRST갤러리"/>
+  <meta name="description" content="퍼스트바리스타·제과제빵학원 제품 사진 갤러리"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>FIRST 제품 갤러리</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; background:#f8f8f8; }
+    #root { min-height:100vh; }
+    /* 설치 배너 */
+    #install-banner {
+      display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999;
+      background:#1a1a1a; color:#fff; padding:14px 20px;
+      flex-direction:row; align-items:center; gap:12px;
+      box-shadow:0 -2px 12px rgba(0,0,0,0.3);
+    }
+    #install-banner.show { display:flex; }
+    #install-banner img { width:36px; height:36px; object-fit:contain; background:#fff; border-radius:8px; padding:4px; }
+    #install-banner .txt { flex:1; }
+    #install-banner .txt strong { display:block; font-size:13px; margin-bottom:2px; }
+    #install-banner .txt span { font-size:11px; color:#aaa; }
+    #install-banner button.ok { background:#e8612a; color:#fff; border:none; padding:8px 16px; font-size:13px; font-weight:700; border-radius:4px; cursor:pointer; white-space:nowrap; }
+    #install-banner button.no { background:none; color:#888; border:none; padding:8px; font-size:20px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- PWA 설치 배너 -->
+  <div id="install-banner">
+    <img src="icon-192.png" alt="아이콘"/>
+    <div class="txt">
+      <strong>홈 화면에 추가하기</strong>
+      <span>앱처럼 바로 열 수 있어요</span>
+    </div>
+    <button class="ok" id="install-btn">설치</button>
+    <button class="no" id="install-close">✕</button>
+  </div>
+
+  <!-- React + Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    // Service Worker 등록
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+
+    // PWA 설치 배너
+    let deferredPrompt;
+    const banner = document.getElementById('install-banner');
+    const installBtn = document.getElementById('install-btn');
+    const closeBtn = document.getElementById('install-close');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.classList.add('show');
+    });
+    installBtn.addEventListener('click', async () => {
+      banner.classList.remove('show');
+      if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+    });
+    closeBtn.addEventListener('click', () => banner.classList.remove('show'));
+    window.addEventListener('appinstalled', () => banner.classList.remove('show'));
+  </script>
+
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
 
 const ACADEMY_NAME = "퍼스트바리스타·제과제빵학원";
 const ACADEMY_SUB  = "FIRST BARISTA & BAKING ACADEMY";
 const LOGO_B64 = "data:image/png;base64,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";
 
 const TEACHERS_DEFAULT = [
-  { id: "all", name: "전체 보기", emoji: "🏫" },
-  { id: "t1",  name: "김선생님",  emoji: "👩‍🍳" },
-  { id: "t2",  name: "이선생님",  emoji: "👨‍🍳" },
-  { id: "t3",  name: "박선생님",  emoji: "👩‍🍳" },
-  { id: "t4",  name: "최선생님",  emoji: "👨‍🍳" },
+  { id:"all", name:"전체 보기", emoji:"🏫" },
+  { id:"t1",  name:"김선생님",  emoji:"👩‍🍳" },
+  { id:"t2",  name:"이선생님",  emoji:"👨‍🍳" },
+  { id:"t3",  name:"박선생님",  emoji:"👩‍🍳" },
+  { id:"t4",  name:"최선생님",  emoji:"👨‍🍳" },
 ];
 
-const STORAGE_KEY         = "gallery_images_v3";
-const TEACHER_STORAGE_KEY = "gallery_teachers_v3";
+const STORAGE_KEY         = "first_gallery_v1";
+const TEACHER_STORAGE_KEY = "first_gallery_teachers_v1";
 const MAX_FILE_MB         = 10;
 const COMPRESS_MAX_PX     = 1600;
 const COMPRESS_QUALITY    = 0.82;
 
-/* ── 사용상태 ── */
 const USE_STATUS = [
   { id:"unused",  label:"미사용",   color:"#888",    bg:"rgba(0,0,0,0.45)" },
-  { id:"used",    label:"사용완료", color:"#e8612a", bg:"rgba(232,97,42,0.75)" },
-  { id:"pending", label:"사용예정", color:"#c9922a", bg:"rgba(201,146,42,0.75)" },
+  { id:"used",    label:"사용완료", color:"#e8612a", bg:"rgba(232,97,42,0.82)" },
+  { id:"pending", label:"사용예정", color:"#c9922a", bg:"rgba(201,146,42,0.82)" },
 ];
 const statusMap = Object.fromEntries(USE_STATUS.map(s=>[s.id,s]));
 
-/* ── 홈페이지 색상 토큰 ── */
 const C = {
-  black:    "#1a1a1a",
-  charcoal: "#2d2d2d",
-  gray:     "#555",
-  grayMid:  "#888",
-  grayLight:"#ccc",
-  line:     "#e5e5e5",
-  bg:       "#f8f8f8",
-  white:    "#ffffff",
-  coral:    "#e8612a",   // 포인트 오렌지/코랄
-  coralLight:"#f4a07a",
-  gold:     "#c9922a",   // 서브 골드
-  goldLight:"#e8c97a",
+  black:"#1a1a1a", charcoal:"#2d2d2d", gray:"#555", grayMid:"#888",
+  grayLight:"#ccc", line:"#e5e5e5", bg:"#f8f8f8", white:"#ffffff",
+  coral:"#e8612a", coralLight:"#f4a07a", gold:"#c9922a",
 };
 
-/* ── 이미지 압축 ── */
 function compressImage(file) {
   return new Promise((res,rej)=>{
     const reader=new FileReader();
@@ -64,149 +134,129 @@ function compressImage(file) {
     reader.readAsDataURL(file);
   });
 }
-function fmtBytes(b64){
-  const bytes=Math.round((b64.length*3)/4);
-  return bytes<1048576?(bytes/1024).toFixed(0)+"KB":(bytes/1048576).toFixed(1)+"MB";
-}
+
 function downloadBlob(blob,filename){
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a"); a.href=url; a.download=filename; a.click();
   URL.revokeObjectURL(url);
 }
-async function downloadAllAsZip(imgs,JSZipLib,label){
-  const zip=new JSZipLib(); const folder=zip.folder(label);
-  imgs.forEach((img,i)=>folder.file(`${String(i+1).padStart(3,"0")}_${img.name}`,img.data.split(",")[1],{base64:true}));
-  downloadBlob(await zip.generateAsync({type:"blob"}),`${label}.zip`);
+async function downloadAllAsZip(imgs,label){
+  const zip=new JSZip(); const folder=zip.folder(label);
+  imgs.forEach((img,i)=>folder.file(String(i+1).padStart(3,"0")+"_"+img.name, img.data.split(",")[1],{base64:true}));
+  downloadBlob(await zip.generateAsync({type:"blob"}), label+".zip");
 }
 
-/* ══════════════════════════════════════════════
-   Main App
-══════════════════════════════════════════════ */
-export default function App() {
-  const [teachers,         setTeachers]         = useState(TEACHERS_DEFAULT);
-  const [images,           setImages]           = useState([]);
-  const [selectedTeacher,  setSelectedTeacher]  = useState("all");
-  const [filterStatus,     setFilterStatus]     = useState("all");
-  const [loading,          setLoading]          = useState(true);
-  const [dragging,         setDragging]         = useState(false);
-  const [lightboxIdx,      setLightboxIdx]      = useState(null);
-  const [uploadingTeacher, setUploadingTeacher] = useState("t1");
-  const [newTeacherName,   setNewTeacherName]   = useState("");
-  const [addingTeacher,    setAddingTeacher]    = useState(false);
-  const [managingTeachers, setManagingTeachers] = useState(false);
-  const [deleteConfirm,    setDeleteConfirm]    = useState(null);
-  const [uploadError,      setUploadError]      = useState("");
-  const [uploadResult,     setUploadResult]     = useState(null);
-  const [uploading,        setUploading]        = useState(false);
-  const [selectedIds,      setSelectedIds]      = useState(new Set());
-  const [selectionMode,    setSelectionMode]    = useState(false);
-  const [sortBy,           setSortBy]           = useState("date-desc");
-  const [groupByDate,      setGroupByDate]      = useState(false);
-  const [zipping,          setZipping]          = useState(false);
-  const [JSZipLib,         setJSZipLib]         = useState(null);
+function App() {
+  const [teachers,setTeachers]               = useState(TEACHERS_DEFAULT);
+  const [images,setImages]                   = useState([]);
+  const [selectedTeacher,setSelectedTeacher] = useState("all");
+  const [filterStatus,setFilterStatus]       = useState("all");
+  const [loading,setLoading]                 = useState(true);
+  const [dragging,setDragging]               = useState(false);
+  const [lightboxIdx,setLightboxIdx]         = useState(null);
+  const [uploadingTeacher,setUploadingTeacher] = useState("t1");
+  const [newTeacherName,setNewTeacherName]   = useState("");
+  const [addingTeacher,setAddingTeacher]     = useState(false);
+  const [managingTeachers,setManagingTeachers] = useState(false);
+  const [deleteConfirm,setDeleteConfirm]     = useState(null);
+  const [uploadError,setUploadError]         = useState("");
+  const [uploadResult,setUploadResult]       = useState(null);
+  const [uploading,setUploading]             = useState(false);
+  const [selectedIds,setSelectedIds]         = useState(new Set());
+  const [selectionMode,setSelectionMode]     = useState(false);
+  const [sortBy,setSortBy]                   = useState("date-desc");
+  const [groupByDate,setGroupByDate]         = useState(false);
+  const [zipping,setZipping]                 = useState(false);
   const fileRef = useRef();
 
   useEffect(()=>{
-    const s=document.createElement("script");
-    s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-    s.onload=()=>setJSZipLib(window.JSZip);
-    document.head.appendChild(s);
     (async()=>{
-      try{const r=await window.storage.get(TEACHER_STORAGE_KEY);if(r){const v=JSON.parse(r.value);if(v?.length)setTeachers(v);}}catch{}
-      try{const r=await window.storage.get(STORAGE_KEY);if(r)setImages(JSON.parse(r.value));}catch{}
+      try{const v=localStorage.getItem(TEACHER_STORAGE_KEY);if(v){const p=JSON.parse(v);if(p?.length)setTeachers(p);}}catch{}
+      try{const v=localStorage.getItem(STORAGE_KEY);if(v)setImages(JSON.parse(v));}catch{}
       setLoading(false);
     })();
   },[]);
 
-  const saveImages   = async(imgs)=>{try{await window.storage.set(STORAGE_KEY,JSON.stringify(imgs));}catch{}};
-  const saveTeachers = async(list)=>{try{await window.storage.set(TEACHER_STORAGE_KEY,JSON.stringify(list));}catch{}};
+  const saveImages   = (imgs)=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(imgs));}catch{}};
+  const saveTeachers = (list)=>{try{localStorage.setItem(TEACHER_STORAGE_KEY,JSON.stringify(list));}catch{}};
 
   const handleFiles = useCallback(async(files)=>{
     setUploadError(""); setUploadResult(null); setUploading(true);
     const newImgs=[]; let origTotal=0,compTotal=0;
     for(const file of Array.from(files)){
       if(!file.type.startsWith("image/")) continue;
-      if(file.size>MAX_FILE_MB*1024*1024){setUploadError(`${MAX_FILE_MB}MB 이하만 가능합니다.`);continue;}
+      if(file.size>MAX_FILE_MB*1024*1024){setUploadError(MAX_FILE_MB+"MB 이하만 가능합니다.");continue;}
       origTotal+=file.size;
       const {data,width,height}=await compressImage(file);
       compTotal+=Math.round((data.length*3)/4);
       const now=new Date();
       newImgs.push({id:Date.now()+Math.random(),teacherId:uploadingTeacher,
-        name:file.name.replace(/\.[^.]+$/,".jpg"),originalName:file.name,
-        data,width,height,
+        name:file.name.replace(/\.[^.]+$/,".jpg"),data,width,height,
         uploadedAt:now.toLocaleDateString("ko-KR"),uploadedTs:now.getTime(),
         useStatus:"unused",blogNote:""});
     }
     setUploading(false);
     if(!newImgs.length) return;
     const updated=[...images,...newImgs];
-    setImages(updated); await saveImages(updated);
+    setImages(updated); saveImages(updated);
     const pct=Math.max(0,Math.round((1-compTotal/origTotal)*100));
     setUploadResult({count:newImgs.length,before:(origTotal/1048576).toFixed(1),after:(compTotal/1048576).toFixed(1),savedPct:pct});
     setTimeout(()=>setUploadResult(null),5000);
   },[images,uploadingTeacher]);
 
-  const cycleStatus=async(id,e)=>{
+  const cycleStatus=(id,e)=>{
     e.stopPropagation();
     const order=["unused","used","pending"];
-    const updated=images.map(img=>{
-      if(img.id!==id) return img;
-      return{...img,useStatus:order[(order.indexOf(img.useStatus||"unused")+1)%order.length]};
-    });
-    setImages(updated); await saveImages(updated);
+    const updated=images.map(img=>img.id!==id?img:{...img,useStatus:order[(order.indexOf(img.useStatus||"unused")+1)%order.length]});
+    setImages(updated); saveImages(updated);
   };
-
-  const saveBlogNote=async(id,note)=>{
+  const saveBlogNote=(id,note)=>{
     const updated=images.map(img=>img.id===id?{...img,blogNote:note}:img);
-    setImages(updated); await saveImages(updated);
+    setImages(updated); saveImages(updated);
   };
-
   const handleDrop=(e)=>{e.preventDefault();setDragging(false);handleFiles(e.dataTransfer.files);};
-  const handleDelete=async(ids)=>{
+  const handleDelete=(ids)=>{
     const idSet=new Set(Array.isArray(ids)?ids:[ids]);
     const updated=images.filter(img=>!idSet.has(img.id));
-    setImages(updated); await saveImages(updated);
+    setImages(updated); saveImages(updated);
     setDeleteConfirm(null); setSelectedIds(new Set());
     if(lightboxIdx!==null) setLightboxIdx(null);
   };
   const handleDownloadSingle=(img)=>{const a=document.createElement("a");a.href=img.data;a.download=img.name;a.click();};
+  const handleDownloadAll=async()=>{
+    if(!filtered.length) return;
+    if(filtered.length===1){handleDownloadSingle(filtered[0]);return;}
+    setZipping(true);
+    await downloadAllAsZip(filtered, selectedTeacher==="all"?"갤러리_전체":getTeacherName(selectedTeacher)+"_전체");
+    setZipping(false);
+  };
   const handleDownloadSelected=async()=>{
     const toD=filtered.filter(img=>selectedIds.has(img.id));
     if(!toD.length) return;
     if(toD.length===1){handleDownloadSingle(toD[0]);return;}
-    if(!JSZipLib){toD.forEach(handleDownloadSingle);return;}
     setZipping(true);
-    await downloadAllAsZip(toD,JSZipLib,selectedTeacher==="all"?"갤러리_선택사진":getTeacherName(selectedTeacher)+"_선택사진");
-    setZipping(false);
-  };
-  const handleDownloadAll=async()=>{
-    if(!filtered.length) return;
-    if(filtered.length===1){handleDownloadSingle(filtered[0]);return;}
-    if(!JSZipLib){filtered.forEach(handleDownloadSingle);return;}
-    setZipping(true);
-    await downloadAllAsZip(filtered,JSZipLib,selectedTeacher==="all"?"갤러리_전체":getTeacherName(selectedTeacher)+"_전체");
+    await downloadAllAsZip(toD, "선택사진");
     setZipping(false);
   };
   const toggleSelect=(id)=>setSelectedIds(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
   const selectAll=()=>setSelectedIds(new Set(filtered.map(i=>i.id)));
   const clearSelection=()=>{setSelectedIds(new Set());setSelectionMode(false);};
 
-  const addTeacher=async()=>{
+  const addTeacher=()=>{
     if(!newTeacherName.trim()) return;
     const id="t"+Date.now(),emoji=["👩‍🍳","👨‍🍳","🧑‍🍳"][teachers.length%3];
     const updated=[...teachers,{id,name:newTeacherName.trim()+"선생님",emoji}];
-    setTeachers(updated); await saveTeachers(updated);
+    setTeachers(updated); saveTeachers(updated);
     setNewTeacherName(""); setAddingTeacher(false); setUploadingTeacher(id);
   };
-  const deleteTeacher=async(tid)=>{
+  const deleteTeacher=(tid)=>{
     const updated=teachers.filter(t=>t.id!==tid);
-    setTeachers(updated); await saveTeachers(updated);
+    setTeachers(updated); saveTeachers(updated);
     const updImgs=images.filter(img=>img.teacherId!==tid);
-    setImages(updImgs); await saveImages(updImgs);
+    setImages(updImgs); saveImages(updImgs);
     if(selectedTeacher===tid) setSelectedTeacher("all");
     setDeleteConfirm(null);
   };
-
   const getTeacherName=(tid)=>teachers.find(t=>t.id===tid)?.name||"알 수 없음";
   const nonAllTeachers=teachers.filter(t=>t.id!=="all");
 
@@ -219,449 +269,334 @@ export default function App() {
     if(sortBy==="status")    return (a.useStatus||"unused").localeCompare(b.useStatus||"unused");
     return 0;
   });
-  const groupedByDate=groupByDate
-    ?filtered.reduce((acc,img)=>{const k=img.uploadedAt||"날짜 없음";if(!acc[k])acc[k]=[];acc[k].push(img);return acc;},{})
-    :null;
+  const groupedByDate=groupByDate?filtered.reduce((acc,img)=>{const k=img.uploadedAt||"날짜 없음";if(!acc[k])acc[k]=[];acc[k].push(img);return acc;},{}) :null;
   const dateKeys=groupedByDate?Object.keys(groupedByDate):[];
   const lightboxImg=lightboxIdx!==null?filtered[lightboxIdx]:null;
   const goLightbox=(dir)=>{const n=lightboxIdx+dir;if(n>=0&&n<filtered.length)setLightboxIdx(n);};
-
   const statusCounts={unused:0,used:0,pending:0};
   base.forEach(img=>{const s=img.useStatus||"unused";statusCounts[s]=(statusCounts[s]||0)+1;});
 
-  /* ── 공통 버튼 ── */
-  const Btn=({onClick,children,primary,danger,active,disabled,style:sx})=>(
-    <button onClick={onClick} disabled={disabled} style={{
-      fontSize:12,padding:"6px 13px",display:"flex",alignItems:"center",gap:5,
-      cursor:disabled?"not-allowed":"pointer",borderRadius:2,
+  const Btn=({onClick,children,primary,danger,active,disabled,full})=>(
+    React.createElement("button",{onClick,disabled,style:{
+      fontSize:13,padding:"8px 14px",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+      cursor:disabled?"not-allowed":"pointer",borderRadius:3,width:full?"100%":undefined,
       background:danger?"#fff1ee":primary?C.coral:active?C.black:C.white,
       color:danger?C.coral:primary?"#fff":active?"#fff":C.black,
-      border:`1px solid ${danger?C.coral:primary?C.coral:active?C.black:C.line}`,
-      opacity:disabled?0.55:1,fontWeight:primary||active?600:400,
-      transition:"all 0.15s",...sx
-    }}>{children}</button>
+      border:"1px solid "+(danger?C.coral:primary?C.coral:active?C.black:C.line),
+      opacity:disabled?0.55:1,fontWeight:primary||active?700:400,transition:"all 0.15s",
+    }},children)
   );
 
-  /* ── 갤러리 그리드 ── */
   const GalleryGrid=({imgs,baseOffset=0})=>(
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(158px,1fr))",gap:12}}>
-      {imgs.map((img,li)=>{
+    React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}},
+      imgs.map((img,li)=>{
         const gi=baseOffset+li;
         const isSel=selectedIds.has(img.id);
         const st=statusMap[img.useStatus||"unused"];
         const isUsed=(img.useStatus||"unused")==="used";
-        return(
-          <div key={img.id}
-            style={{position:"relative",borderRadius:0,overflow:"hidden",
-              border:isSel?`2px solid ${C.coral}`:isUsed?`2px solid ${C.coral}`:`1px solid ${C.line}`,
-              cursor:"pointer",aspectRatio:"1",boxSizing:"border-box",background:C.white,
-              opacity:isUsed?0.8:1,
-            }}
-            onClick={()=>selectionMode?toggleSelect(img.id):setLightboxIdx(gi)}>
-            <img src={img.data} alt={img.name}
-              style={{width:"100%",height:"100%",objectFit:"cover",display:"block",
-                filter:isUsed?"grayscale(25%)":"none",transition:"filter 0.2s"}}/>
+        return React.createElement("div",{key:img.id,
+          style:{position:"relative",overflow:"hidden",aspectRatio:"1",boxSizing:"border-box",background:C.white,
+            border:isSel?"2px solid "+C.coral:isUsed?"2px solid "+C.coral:"1px solid "+C.line,
+            cursor:"pointer",opacity:isUsed?0.8:1},
+          onClick:()=>selectionMode?toggleSelect(img.id):setLightboxIdx(gi)},
 
-            {/* 사용상태 배지 */}
-            <button onClick={(e)=>cycleStatus(img.id,e)} title="클릭하면 상태 변경"
-              style={{position:"absolute",top:0,right:0,
-                background:st.bg,border:"none",
-                color:"#fff",padding:"3px 8px",fontSize:10,fontWeight:700,
-                cursor:"pointer",display:"flex",alignItems:"center",gap:3,lineHeight:1.5,
-                letterSpacing:"0.3px"}}>
-              {isUsed?"✓":"○"} {st.label}
-            </button>
+          React.createElement("img",{src:img.data,alt:img.name,
+            style:{width:"100%",height:"100%",objectFit:"cover",display:"block",
+              filter:isUsed?"grayscale(25%)":"none"}}),
 
-            {/* 선택 체크박스 */}
-            {(selectionMode||isSel)&&(
-              <div style={{position:"absolute",top:6,left:6,width:20,height:20,
-                background:isSel?C.coral:"rgba(255,255,255,0.92)",
-                border:isSel?"none":`1.5px solid ${C.grayLight}`,
-                display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {isSel&&<svg width="11" height="11" viewBox="0 0 11 11"><polyline points="1.5,6 4,8.5 9.5,2" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-              </div>
-            )}
+          // 사용상태 배지
+          React.createElement("button",{onClick:e=>cycleStatus(img.id,e),
+            style:{position:"absolute",top:0,right:0,background:st.bg,border:"none",color:"#fff",
+              padding:"3px 8px",fontSize:10,fontWeight:700,cursor:"pointer",lineHeight:1.6}},
+            (img.useStatus||"unused")==="used"?"✓ "+st.label:"○ "+st.label),
 
-            {/* hover 오버레이 */}
-            {!selectionMode&&(
-              <div style={{position:"absolute",inset:0,
-                background:"linear-gradient(to top,rgba(0,0,0,0.72) 0%,transparent 50%)",
-                opacity:0,transition:"opacity 0.18s"}}
-                onMouseEnter={e=>e.currentTarget.style.opacity=1}
-                onMouseLeave={e=>e.currentTarget.style.opacity=0}>
-                <div style={{position:"absolute",bottom:7,left:8,right:38}}>
-                  <p style={{fontSize:11,color:"#fff",margin:"0 0 1px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                    {getTeacherName(img.teacherId)}
-                  </p>
-                  <p style={{fontSize:10,color:"rgba(255,255,255,0.7)",margin:0}}>
-                    {img.uploadedAt}{img.width?` · ${img.width}×${img.height}`:""}
-                  </p>
-                  {img.blogNote&&<p style={{fontSize:10,color:C.goldLight,margin:"2px 0 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📝 {img.blogNote}</p>}
-                </div>
-                <div style={{position:"absolute",bottom:7,right:6,display:"flex",gap:4}}>
-                  <button onClick={e=>{e.stopPropagation();handleDownloadSingle(img);}}
-                    style={{width:26,height:26,background:"rgba(232,97,42,0.85)",border:"none",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:13}}>
-                    <i className="ti ti-download" aria-hidden="true"/>
-                  </button>
-                  <button onClick={e=>{e.stopPropagation();setDeleteConfirm(img.id);}}
-                    style={{width:26,height:26,background:"rgba(0,0,0,0.55)",border:"none",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:13}}>
-                    <i className="ti ti-trash" aria-hidden="true"/>
-                  </button>
-                </div>
-              </div>
-            )}
+          // 선택 체크박스
+          (selectionMode||isSel)&&React.createElement("div",{
+            style:{position:"absolute",top:6,left:6,width:22,height:22,
+              background:isSel?C.coral:"rgba(255,255,255,0.92)",
+              border:isSel?"none":"1.5px solid "+C.grayLight,
+              display:"flex",alignItems:"center",justifyContent:"center"}},
+            isSel&&React.createElement("svg",{width:11,height:11,viewBox:"0 0 11 11"},
+              React.createElement("polyline",{points:"1.5,6 4,8.5 9.5,2",stroke:"#fff",strokeWidth:2,fill:"none",strokeLinecap:"round",strokeLinejoin:"round"})
+            )
+          ),
 
-            {/* 삭제 확인 */}
-            {deleteConfirm===img.id&&(
-              <div onClick={e=>e.stopPropagation()}
-                style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-                <p style={{color:"#fff",fontSize:12,margin:0}}>삭제할까요?</p>
-                <div style={{display:"flex",gap:6}}>
-                  <button onClick={()=>handleDelete(img.id)} style={{fontSize:12,padding:"4px 12px",background:C.coral,color:"#fff",border:"none",cursor:"pointer"}}>삭제</button>
-                  <button onClick={()=>setDeleteConfirm(null)} style={{fontSize:12,padding:"4px 12px",background:"rgba(255,255,255,0.18)",color:"#fff",border:"none",cursor:"pointer"}}>취소</button>
-                </div>
-              </div>
-            )}
-          </div>
+          // hover 오버레이
+          !selectionMode&&React.createElement("div",{
+            style:{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,0.72) 0%,transparent 50%)",
+              opacity:0,transition:"opacity 0.18s"},
+            onMouseEnter:e=>e.currentTarget.style.opacity=1,
+            onMouseLeave:e=>e.currentTarget.style.opacity=0},
+            React.createElement("div",{style:{position:"absolute",bottom:7,left:8,right:36}},
+              React.createElement("p",{style:{fontSize:11,color:"#fff",margin:"0 0 1px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},getTeacherName(img.teacherId)),
+              React.createElement("p",{style:{fontSize:10,color:"rgba(255,255,255,0.7)",margin:0}},img.uploadedAt),
+              img.blogNote&&React.createElement("p",{style:{fontSize:10,color:"#f4c87a",margin:"2px 0 0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},"📝 "+img.blogNote)
+            ),
+            React.createElement("div",{style:{position:"absolute",bottom:7,right:6,display:"flex",gap:4}},
+              React.createElement("button",{onClick:e=>{e.stopPropagation();handleDownloadSingle(img);},
+                style:{width:28,height:28,background:"rgba(232,97,42,0.85)",border:"none",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:15}},
+                "⬇"),
+              React.createElement("button",{onClick:e=>{e.stopPropagation();setDeleteConfirm(img.id);},
+                style:{width:28,height:28,background:"rgba(0,0,0,0.55)",border:"none",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:13}},
+                "🗑")
+            )
+          ),
+
+          // 삭제 확인
+          deleteConfirm===img.id&&React.createElement("div",{onClick:e=>e.stopPropagation(),
+            style:{position:"absolute",inset:0,background:"rgba(0,0,0,0.82)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}},
+            React.createElement("p",{style:{color:"#fff",fontSize:12,margin:0}},"삭제할까요?"),
+            React.createElement("div",{style:{display:"flex",gap:6}},
+              React.createElement("button",{onClick:()=>handleDelete(img.id),style:{fontSize:12,padding:"5px 14px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:700}},"삭제"),
+              React.createElement("button",{onClick:()=>setDeleteConfirm(null),style:{fontSize:12,padding:"5px 12px",background:"rgba(255,255,255,0.18)",color:"#fff",border:"none",cursor:"pointer"}},"취소")
+            )
+          )
         );
-      })}
-    </div>
+      })
+    )
   );
 
-  if(loading) return(
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:300,color:C.gray,fontSize:15}}>
-      불러오는 중...
-    </div>
-  );
+  if(loading) return React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",color:C.gray}},"불러오는 중...");
 
-  return(
-    <div style={{fontFamily:"'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif",minHeight:"100vh",background:C.bg}}>
+  return React.createElement("div",{style:{fontFamily:"'Apple SD Gothic Neo','Malgun Gothic',sans-serif",minHeight:"100vh",background:C.bg}},
 
-      {/* ══ 상단 네비 바 ════════════════════════════════ */}
-      <div style={{background:C.black,padding:"8px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <span style={{fontSize:11,color:"#aaa",letterSpacing:"0.5px"}}>퍼스트바리스타·제과제빵학원 화성캠퍼스</span>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <span style={{fontSize:11,color:C.coral,fontWeight:600,letterSpacing:"0.3px"}}>제품 갤러리 관리</span>
-        </div>
-      </div>
+    // 상단 네비
+    React.createElement("div",{style:{background:C.black,padding:"8px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}},
+      React.createElement("span",{style:{fontSize:11,color:"#aaa"}},"퍼스트바리스타·제과제빵학원"),
+      React.createElement("span",{style:{fontSize:11,color:C.coral,fontWeight:700}},"제품 갤러리")
+    ),
 
-      {/* ══ 메인 헤더 ════════════════════════════════════ */}
-      <div style={{background:C.white,borderBottom:`1px solid ${C.line}`,padding:"16px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        {/* 실제 로고 이미지 */}
-        <img src={LOGO_B64} alt="퍼스트바리스타·제과제빵학원 로고"
-          style={{height:48,objectFit:"contain",display:"block"}}/>
-        <div style={{textAlign:"right"}}>
-          <p style={{fontSize:11,color:C.grayMid,margin:0,letterSpacing:"1px"}}>{ACADEMY_SUB}</p>
-          <p style={{fontSize:12,color:C.coral,margin:"3px 0 0",fontWeight:600}}>📸 제품 사진 갤러리</p>
-        </div>
-      </div>
+    // 헤더
+    React.createElement("div",{style:{background:C.white,borderBottom:"1px solid "+C.line,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}},
+      React.createElement("img",{src:LOGO_B64,alt:"로고",style:{height:42,objectFit:"contain"}}),
+      React.createElement("div",{style:{textAlign:"right"}},
+        React.createElement("p",{style:{fontSize:11,color:C.grayMid,margin:0}},"FIRST BARISTA & BAKING"),
+        React.createElement("p",{style:{fontSize:12,color:C.coral,margin:"2px 0 0",fontWeight:700}},"📸 제품 사진 갤러리")
+      )
+    ),
 
-      {/* ══ 코랄 포인트 라인 ════════════════════════════ */}
-      <div style={{height:3,background:`linear-gradient(to right,${C.coral},${C.gold},${C.coral})`}}/>
+    // 포인트 라인
+    React.createElement("div",{style:{height:3,background:"linear-gradient(to right,"+C.coral+","+C.gold+","+C.coral+")"}}),
 
-      {/* ══ 바디 ════════════════════════════════════════ */}
-      <div style={{maxWidth:760,margin:"0 auto",padding:"1.5rem 1rem 3rem"}}>
+    // 바디
+    React.createElement("div",{style:{maxWidth:760,margin:"0 auto",padding:"1.25rem 1rem 5rem"}},
 
-        {/* 설정 버튼 */}
-        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.25rem"}}>
-          <Btn onClick={()=>setManagingTeachers(!managingTeachers)}
-            active={managingTeachers}>
-            <i className="ti ti-settings" style={{fontSize:14}} aria-hidden="true"/> 선생님 관리
-          </Btn>
-        </div>
+      // 설정 버튼
+      React.createElement("div",{style:{display:"flex",justifyContent:"flex-end",marginBottom:"1rem"}},
+        React.createElement(Btn,{onClick:()=>setManagingTeachers(!managingTeachers),active:managingTeachers},"⚙ 선생님 관리")
+      ),
 
-        {/* 선생님 관리 패널 */}
-        {managingTeachers&&(
-          <div style={{background:C.white,border:`1px solid ${C.line}`,padding:"1.25rem",marginBottom:"1.25rem"}}>
-            <p style={{fontSize:14,fontWeight:700,margin:"0 0 14px",color:C.black,borderLeft:`3px solid ${C.coral}`,paddingLeft:10}}>선생님 목록</p>
-            {nonAllTeachers.map(t=>(
-              <div key={t.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.line}`}}>
-                <span style={{fontSize:13,color:C.charcoal}}>{t.emoji} {t.name} ({images.filter(i=>i.teacherId===t.id).length}장)</span>
-                {deleteConfirm===t.id?(
-                  <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                    <span style={{fontSize:12,color:C.coral}}>삭제할까요?</span>
-                    <button onClick={()=>deleteTeacher(t.id)} style={{fontSize:12,padding:"3px 10px",background:C.coral,color:"#fff",border:"none",cursor:"pointer"}}>삭제</button>
-                    <button onClick={()=>setDeleteConfirm(null)} style={{fontSize:12,padding:"3px 10px",background:C.bg,border:`1px solid ${C.line}`,cursor:"pointer"}}>취소</button>
-                  </div>
-                ):(
-                  <button onClick={()=>setDeleteConfirm(t.id)} style={{fontSize:12,padding:"3px 10px",background:C.bg,border:`1px solid ${C.line}`,color:C.gray,cursor:"pointer"}}>
-                    삭제
-                  </button>
-                )}
-              </div>
-            ))}
-            {addingTeacher?(
-              <div style={{display:"flex",gap:8,marginTop:12}}>
-                <input placeholder="선생님 이름" value={newTeacherName} onChange={e=>setNewTeacherName(e.target.value)}
-                  onKeyDown={e=>e.key==="Enter"&&addTeacher()}
-                  style={{flex:1,fontSize:13,padding:"6px 10px",border:`1px solid ${C.line}`,outline:"none"}} autoFocus/>
-                <button onClick={addTeacher} style={{fontSize:13,padding:"6px 16px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:600}}>추가</button>
-                <button onClick={()=>{setAddingTeacher(false);setNewTeacherName("");}} style={{fontSize:13,padding:"6px 12px",background:C.bg,border:`1px solid ${C.line}`,cursor:"pointer"}}>취소</button>
-              </div>
-            ):(
-              <button onClick={()=>setAddingTeacher(true)}
-                style={{marginTop:12,fontSize:13,display:"flex",alignItems:"center",gap:5,background:"none",border:`1px dashed ${C.coral}`,color:C.coral,padding:"6px 14px",cursor:"pointer"}}>
-                + 선생님 추가
-              </button>
-            )}
-          </div>
-        )}
+      // 선생님 관리 패널
+      managingTeachers&&React.createElement("div",{style:{background:C.white,border:"1px solid "+C.line,padding:"1.25rem",marginBottom:"1.25rem"}},
+        React.createElement("p",{style:{fontSize:14,fontWeight:700,margin:"0 0 14px",color:C.black,borderLeft:"3px solid "+C.coral,paddingLeft:10}},"선생님 목록"),
+        nonAllTeachers.map(t=>React.createElement("div",{key:t.id,style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px solid "+C.line}},
+          React.createElement("span",{style:{fontSize:13,color:C.charcoal}},t.emoji+" "+t.name+" ("+images.filter(i=>i.teacherId===t.id).length+"장)"),
+          deleteConfirm===t.id
+            ?React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},
+              React.createElement("span",{style:{fontSize:12,color:C.coral}},"삭제할까요?"),
+              React.createElement("button",{onClick:()=>deleteTeacher(t.id),style:{fontSize:12,padding:"3px 10px",background:C.coral,color:"#fff",border:"none",cursor:"pointer"}},"삭제"),
+              React.createElement("button",{onClick:()=>setDeleteConfirm(null),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
+            )
+            :React.createElement("button",{onClick:()=>setDeleteConfirm(t.id),style:{fontSize:12,padding:"3px 10px",background:C.bg,border:"1px solid "+C.line,color:C.gray,cursor:"pointer"}},"삭제")
+        )),
+        addingTeacher
+          ?React.createElement("div",{style:{display:"flex",gap:8,marginTop:12}},
+            React.createElement("input",{placeholder:"선생님 이름",value:newTeacherName,onChange:e=>setNewTeacherName(e.target.value),
+              onKeyDown:e=>e.key==="Enter"&&addTeacher(),autoFocus:true,
+              style:{flex:1,fontSize:13,padding:"7px 10px",border:"1px solid "+C.line,outline:"none"}}),
+            React.createElement("button",{onClick:addTeacher,style:{fontSize:13,padding:"7px 16px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:700}},"추가"),
+            React.createElement("button",{onClick:()=>{setAddingTeacher(false);setNewTeacherName("");},style:{fontSize:13,padding:"7px 12px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
+          )
+          :React.createElement("button",{onClick:()=>setAddingTeacher(true),style:{marginTop:12,fontSize:13,display:"flex",alignItems:"center",gap:5,background:"none",border:"1px dashed "+C.coral,color:C.coral,padding:"7px 14px",cursor:"pointer"}},
+            "+ 선생님 추가")
+      ),
 
-        {/* 업로드 존 */}
-        <div onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={handleDrop}
-          onClick={()=>fileRef.current.click()}
-          style={{border:`2px dashed ${dragging?C.coral:C.grayLight}`,padding:"1.25rem",marginBottom:"1.5rem",
-            cursor:"pointer",background:dragging?"#fff1ee":C.white,transition:"all 0.15s",
-            display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
-          <i className={`ti ${uploading?"ti-loader":"ti-upload"}`}
-            style={{fontSize:28,color:dragging?C.coral:C.grayMid}} aria-hidden="true"/>
-          <p style={{fontSize:13,color:dragging?C.coral:C.gray,margin:0,textAlign:"center"}}>
-            {uploading?"압축 중...":<>
-            <span style={{fontWeight:600}}>탭하여 갤러리에서 사진 선택</span>
-            <br/>
-            <span style={{fontSize:11,color:C.grayMid}}>PC에서는 드래그도 가능 · 최대 {MAX_FILE_MB}MB · 자동 압축</span>
-          </>}
-          </p>
-          <div onClick={e=>e.stopPropagation()} style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:13,color:C.gray}}>선생님 선택:</span>
-            <select value={uploadingTeacher} onChange={e=>setUploadingTeacher(e.target.value)}
-              style={{fontSize:13,padding:"5px 10px",border:`1px solid ${C.line}`,background:C.white,outline:"none"}}>
-              {nonAllTeachers.map(t=><option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}
-            </select>
-          </div>
-          {uploadError&&<p style={{fontSize:12,color:C.coral,margin:0}}>{uploadError}</p>}
-          {uploadResult&&(
-            <div style={{display:"flex",alignItems:"center",gap:6,background:"#fff1ee",border:`1px solid ${C.coral}`,padding:"6px 14px"}}>
-              <i className="ti ti-check" style={{fontSize:14,color:C.coral}} aria-hidden="true"/>
-              <span style={{fontSize:12,color:C.coral,fontWeight:600}}>
-                {uploadResult.count}장 완료 · {uploadResult.before}MB → {uploadResult.after}MB ({uploadResult.savedPct}% 절약)
-              </span>
-            </div>
-          )}
-          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif"
-            multiple style={{display:"none"}} onChange={e=>handleFiles(e.target.files)}/>
-        </div>
+      // 업로드 존
+      React.createElement("div",{
+        onDragOver:e=>{e.preventDefault();setDragging(true);},
+        onDragLeave:()=>setDragging(false),
+        onDrop:handleDrop,
+        onClick:()=>fileRef.current.click(),
+        style:{border:"2px dashed "+(dragging?C.coral:C.grayLight),padding:"1.5rem 1rem",marginBottom:"1.25rem",
+          cursor:"pointer",background:dragging?"#fff1ee":C.white,transition:"all 0.15s",
+          display:"flex",flexDirection:"column",alignItems:"center",gap:10}},
+        React.createElement("div",{style:{fontSize:36}},uploading?"⏳":"📤"),
+        React.createElement("p",{style:{fontSize:14,color:dragging?C.coral:C.gray,margin:0,textAlign:"center",fontWeight:600}},
+          uploading?"압축 중...":"사진을 탭하여 갤러리에서 선택"),
+        React.createElement("p",{style:{fontSize:11,color:C.grayMid,margin:0}},"최대 "+MAX_FILE_MB+"MB · 자동 압축 · 여러 장 동시 선택 가능"),
+        React.createElement("div",{onClick:e=>e.stopPropagation(),style:{display:"flex",alignItems:"center",gap:8}},
+          React.createElement("span",{style:{fontSize:13,color:C.gray}},"선생님:"),
+          React.createElement("select",{value:uploadingTeacher,onChange:e=>setUploadingTeacher(e.target.value),
+            style:{fontSize:13,padding:"6px 12px",border:"1px solid "+C.line,background:C.white,outline:"none"}},
+            nonAllTeachers.map(t=>React.createElement("option",{key:t.id,value:t.id},t.emoji+" "+t.name)))
+        ),
+        uploadError&&React.createElement("p",{style:{fontSize:12,color:C.coral,margin:0,fontWeight:600}},uploadError),
+        uploadResult&&React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,background:"#fff1ee",border:"1px solid "+C.coral,padding:"8px 16px"}},
+          React.createElement("span",{style:{fontSize:13,color:C.coral,fontWeight:700}},
+            "✓ "+uploadResult.count+"장 완료 · "+uploadResult.before+"MB → "+uploadResult.after+"MB ("+uploadResult.savedPct+"% 절약)")
+        ),
+        React.createElement("input",{ref:fileRef,type:"file",
+          accept:"image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif",
+          multiple:true,style:{display:"none"},onChange:e=>handleFiles(e.target.files)})
+      ),
 
-        {/* 블로그 사용현황 카드 */}
-        {base.length>0&&(
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:"1.5rem"}}>
-            {USE_STATUS.map(st=>(
-              <button key={st.id} onClick={()=>setFilterStatus(filterStatus===st.id?"all":st.id)}
-                style={{padding:"14px 8px",textAlign:"center",cursor:"pointer",
-                  background:filterStatus===st.id?st.id==="used"?"#fff1ee":st.id==="pending"?"#fff8e8":C.bg:C.white,
-                  border:`1.5px solid ${filterStatus===st.id?st.color:C.line}`,
-                  transition:"all 0.15s"}}>
-                <div style={{fontSize:22,marginBottom:4}}>
-                  {st.id==="used"?"✅":st.id==="pending"?"🔖":"📷"}
-                </div>
-                <div style={{fontSize:22,fontWeight:700,color:st.color,lineHeight:1}}>{statusCounts[st.id]||0}</div>
-                <div style={{fontSize:11,color:C.grayMid,marginTop:3,fontWeight:500}}>{st.label}</div>
-              </button>
-            ))}
-          </div>
-        )}
+      // 사용현황 카드
+      base.length>0&&React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:"1.25rem"}},
+        USE_STATUS.map(st=>React.createElement("button",{key:st.id,
+          onClick:()=>setFilterStatus(filterStatus===st.id?"all":st.id),
+          style:{padding:"14px 8px",textAlign:"center",cursor:"pointer",
+            background:filterStatus===st.id?st.id==="used"?"#fff1ee":st.id==="pending"?"#fff8e8":C.bg:C.white,
+            border:"1.5px solid "+(filterStatus===st.id?st.color:C.line),transition:"all 0.15s"}},
+          React.createElement("div",{style:{fontSize:24,marginBottom:4}},st.id==="used"?"✅":st.id==="pending"?"🔖":"📷"),
+          React.createElement("div",{style:{fontSize:22,fontWeight:700,color:st.color,lineHeight:1}},statusCounts[st.id]||0),
+          React.createElement("div",{style:{fontSize:11,color:C.grayMid,marginTop:3,fontWeight:600}},st.label)
+        ))
+      ),
 
-        {/* 선생님 탭 */}
-        <div style={{display:"flex",gap:0,flexWrap:"wrap",marginBottom:"1.25rem",borderBottom:`2px solid ${C.line}`}}>
-          {teachers.map(t=>{
-            const count=t.id==="all"?images.length:images.filter(i=>i.teacherId===t.id).length;
-            const active=selectedTeacher===t.id;
-            return(
-              <button key={t.id}
-                onClick={()=>{setSelectedTeacher(t.id);setSelectedIds(new Set());setSelectionMode(false);}}
-                style={{fontSize:13,padding:"10px 18px",cursor:"pointer",fontWeight:active?700:400,
-                  background:"none",color:active?C.coral:C.gray,
-                  border:"none",borderBottom:active?`2px solid ${C.coral}`:"2px solid transparent",
-                  marginBottom:-2,display:"flex",alignItems:"center",gap:6,transition:"all 0.15s"}}>
-                {t.emoji} {t.name}
-                <span style={{fontSize:11,background:active?C.coral:C.bg,
-                  color:active?"#fff":C.grayMid,
-                  borderRadius:10,padding:"1px 7px",fontWeight:600}}>{count}</span>
-              </button>
-            );
-          })}
-        </div>
+      // 선생님 탭
+      React.createElement("div",{style:{display:"flex",flexWrap:"wrap",marginBottom:"1.25rem",borderBottom:"2px solid "+C.line}},
+        teachers.map(t=>{
+          const count=t.id==="all"?images.length:images.filter(i=>i.teacherId===t.id).length;
+          const active=selectedTeacher===t.id;
+          return React.createElement("button",{key:t.id,
+            onClick:()=>{setSelectedTeacher(t.id);setSelectedIds(new Set());setSelectionMode(false);},
+            style:{fontSize:13,padding:"10px 14px",cursor:"pointer",fontWeight:active?700:400,
+              background:"none",color:active?C.coral:C.gray,border:"none",
+              borderBottom:active?"2px solid "+C.coral:"2px solid transparent",
+              marginBottom:-2,display:"flex",alignItems:"center",gap:5,transition:"all 0.15s",whiteSpace:"nowrap"}},
+            t.emoji+" "+t.name,
+            React.createElement("span",{style:{fontSize:11,background:active?C.coral:C.bg,
+              color:active?"#fff":C.grayMid,borderRadius:10,padding:"1px 7px",fontWeight:700}},count)
+          );
+        })
+      ),
 
-        {/* 툴바 */}
-        {filtered.length>0&&(
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:"1.25rem",flexWrap:"wrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
-                style={{fontSize:12,padding:"6px 10px",border:`1px solid ${C.line}`,background:C.white,outline:"none",color:C.black}}>
-                <option value="date-desc">최신순</option>
-                <option value="date-asc">오래된순</option>
-                <option value="teacher">선생님순</option>
-                <option value="status">사용상태순</option>
-              </select>
-            </div>
-            <Btn onClick={()=>setGroupByDate(!groupByDate)} active={groupByDate}>
-              <i className="ti ti-calendar" style={{fontSize:14}} aria-hidden="true"/> 날짜별 묶기
-            </Btn>
-            {filterStatus!=="all"&&(
-              <span style={{fontSize:11,padding:"5px 12px",
-                background:filterStatus==="used"?"#fff1ee":"#fff8e8",
-                border:`1px solid ${statusMap[filterStatus].color}`,
-                color:statusMap[filterStatus].color,fontWeight:700}}>
-                {statusMap[filterStatus].label} 필터 적용 중 ✕
-              </span>
-            )}
-            <div style={{flex:1}}/>
-            {!selectionMode?(
-              <>
-                <Btn onClick={()=>setSelectionMode(true)}>
-                  <i className="ti ti-checkbox" style={{fontSize:14}} aria-hidden="true"/> 선택
-                </Btn>
-                <Btn onClick={handleDownloadAll} disabled={zipping} primary>
-                  <i className="ti ti-download" style={{fontSize:14}} aria-hidden="true"/>
-                  {zipping?"압축 중...":`전체 다운로드 (${filtered.length}장)`}
-                </Btn>
-              </>
-            ):(
-              <>
-                <Btn onClick={selectAll}>전체 선택</Btn>
-                <Btn onClick={clearSelection}>취소</Btn>
-                {selectedIds.size>0&&(
-                  <>
-                    <Btn onClick={handleDownloadSelected} disabled={zipping} primary>
-                      <i className="ti ti-download" style={{fontSize:14}} aria-hidden="true"/>
-                      {zipping?"압축 중...":`${selectedIds.size}장 다운로드`}
-                    </Btn>
-                    <Btn onClick={()=>setDeleteConfirm("selected")} danger>
-                      <i className="ti ti-trash" style={{fontSize:14}} aria-hidden="true"/> {selectedIds.size}장 삭제
-                    </Btn>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        )}
+      // 툴바
+      filtered.length>0&&React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:"1.25rem",flexWrap:"wrap"}},
+        React.createElement("select",{value:sortBy,onChange:e=>setSortBy(e.target.value),
+          style:{fontSize:12,padding:"7px 10px",border:"1px solid "+C.line,background:C.white,outline:"none"}},
+          React.createElement("option",{value:"date-desc"},"최신순"),
+          React.createElement("option",{value:"date-asc"},"오래된순"),
+          React.createElement("option",{value:"teacher"},"선생님순"),
+          React.createElement("option",{value:"status"},"사용상태순")
+        ),
+        React.createElement(Btn,{onClick:()=>setGroupByDate(!groupByDate),active:groupByDate},"📅 날짜별"),
+        React.createElement("div",{style:{flex:1}}),
+        !selectionMode
+          ?React.createElement(React.Fragment,null,
+            React.createElement(Btn,{onClick:()=>setSelectionMode(true)},"☑ 선택"),
+            React.createElement(Btn,{onClick:handleDownloadAll,disabled:zipping,primary:true},
+              zipping?"압축 중...":"⬇ 전체 ("+filtered.length+"장)")
+          )
+          :React.createElement(React.Fragment,null,
+            React.createElement(Btn,{onClick:selectAll},"전체"),
+            React.createElement(Btn,{onClick:clearSelection},"취소"),
+            selectedIds.size>0&&React.createElement(React.Fragment,null,
+              React.createElement(Btn,{onClick:handleDownloadSelected,disabled:zipping,primary:true},
+                zipping?"압축 중...":"⬇ "+selectedIds.size+"장"),
+              React.createElement(Btn,{onClick:()=>setDeleteConfirm("selected"),danger:true},"🗑 "+selectedIds.size+"장")
+            )
+          )
+      ),
 
-        {/* 일괄 삭제 확인 */}
-        {deleteConfirm==="selected"&&(
-          <div style={{background:"#fff1ee",border:`1px solid ${C.coral}`,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <span style={{fontSize:13,color:C.coral,fontWeight:600}}>선택한 {selectedIds.size}장을 삭제할까요?</span>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>handleDelete([...selectedIds])} style={{fontSize:12,padding:"5px 16px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:600}}>삭제</button>
-              <button onClick={()=>setDeleteConfirm(null)} style={{fontSize:12,padding:"5px 12px",background:C.bg,border:`1px solid ${C.line}`,cursor:"pointer"}}>취소</button>
-            </div>
-          </div>
-        )}
+      // 일괄삭제 확인
+      deleteConfirm==="selected"&&React.createElement("div",{style:{background:"#fff1ee",border:"1px solid "+C.coral,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}},
+        React.createElement("span",{style:{fontSize:13,color:C.coral,fontWeight:700}},"선택한 "+selectedIds.size+"장을 삭제할까요?"),
+        React.createElement("div",{style:{display:"flex",gap:8}},
+          React.createElement("button",{onClick:()=>handleDelete([...selectedIds]),style:{fontSize:13,padding:"6px 16px",background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:700}},"삭제"),
+          React.createElement("button",{onClick:()=>setDeleteConfirm(null),style:{fontSize:13,padding:"6px 12px",background:C.bg,border:"1px solid "+C.line,cursor:"pointer"}},"취소")
+        )
+      ),
 
-        {/* 갤러리 */}
-        {filtered.length===0?(
-          <div style={{textAlign:"center",padding:"4rem 1rem",background:C.white,border:`1px solid ${C.line}`}}>
-            <i className="ti ti-photo" style={{fontSize:44,display:"block",marginBottom:14,color:C.grayLight}} aria-hidden="true"/>
-            <p style={{fontSize:14,margin:0,color:C.grayMid}}>
-              {filterStatus!=="all"?`${statusMap[filterStatus].label} 사진이 없습니다.`:selectedTeacher==="all"?"아직 업로드된 사진이 없습니다.":"이 선생님의 사진이 없습니다."}
-            </p>
-          </div>
-        ):groupByDate?(
-          <div style={{display:"flex",flexDirection:"column",gap:"2rem"}}>
-            {dateKeys.map(date=>{
+      // 갤러리
+      filtered.length===0
+        ?React.createElement("div",{style:{textAlign:"center",padding:"4rem 1rem",background:C.white,border:"1px solid "+C.line}},
+          React.createElement("div",{style:{fontSize:48,marginBottom:14}},"📷"),
+          React.createElement("p",{style:{fontSize:14,color:C.grayMid}},
+            filterStatus!=="all"?statusMap[filterStatus].label+" 사진이 없습니다.":"아직 업로드된 사진이 없습니다.")
+        )
+        :groupByDate
+          ?React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:"2rem"}},
+            dateKeys.map(date=>{
               const dateImgs=groupedByDate[date];
               const dateOffset=filtered.indexOf(dateImgs[0]);
-              return(
-                <div key={date}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                    <div style={{width:3,height:16,background:C.coral}}/>
-                    <span style={{fontSize:14,fontWeight:700,color:C.black}}>{date}</span>
-                    <span style={{fontSize:12,color:C.grayMid}}>{dateImgs.length}장</span>
-                    <div style={{flex:1,height:"1px",background:C.line}}/>
-                  </div>
-                  <GalleryGrid imgs={dateImgs} baseOffset={dateOffset}/>
-                </div>
+              return React.createElement("div",{key:date},
+                React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+                  React.createElement("div",{style:{width:3,height:16,background:C.coral}}),
+                  React.createElement("span",{style:{fontSize:14,fontWeight:700,color:C.black}},date),
+                  React.createElement("span",{style:{fontSize:12,color:C.grayMid}},dateImgs.length+"장"),
+                  React.createElement("div",{style:{flex:1,height:1,background:C.line}})
+                ),
+                React.createElement(GalleryGrid,{imgs:dateImgs,baseOffset:dateOffset})
               );
-            })}
-          </div>
-        ):(
-          <GalleryGrid imgs={filtered} baseOffset={0}/>
-        )}
+            })
+          )
+          :React.createElement(GalleryGrid,{imgs:filtered,baseOffset:0}),
 
-        {/* 하단 통계 */}
-        {images.length>0&&(
-          <div style={{marginTop:"2rem",paddingTop:"1rem",borderTop:`1px solid ${C.line}`,display:"flex",gap:20,flexWrap:"wrap"}}>
-            <span style={{fontSize:12,color:C.grayMid}}>총 {images.length}장</span>
-            {nonAllTeachers.filter(t=>images.some(i=>i.teacherId===t.id)).map(t=>(
-              <span key={t.id} style={{fontSize:12,color:C.grayMid}}>{t.name} {images.filter(i=>i.teacherId===t.id).length}장</span>
-            ))}
-            {selectionMode&&selectedIds.size>0&&(
-              <span style={{fontSize:12,color:C.coral,fontWeight:700}}>{selectedIds.size}장 선택됨</span>
-            )}
-          </div>
-        )}
+      // 하단 통계
+      images.length>0&&React.createElement("div",{style:{marginTop:"2rem",paddingTop:"1rem",borderTop:"1px solid "+C.line,display:"flex",gap:16,flexWrap:"wrap"}},
+        React.createElement("span",{style:{fontSize:12,color:C.grayMid}},"총 "+images.length+"장"),
+        nonAllTeachers.filter(t=>images.some(i=>i.teacherId===t.id)).map(t=>
+          React.createElement("span",{key:t.id,style:{fontSize:12,color:C.grayMid}},t.name+" "+images.filter(i=>i.teacherId===t.id).length+"장")
+        )
+      ),
 
-        {/* 푸터 */}
-        <div style={{marginTop:"2.5rem",paddingTop:"1.5rem",borderTop:`1px solid ${C.line}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <img src={LOGO_B64} alt="로고" style={{height:28,objectFit:"contain",opacity:0.45}}/>
-          <span style={{fontSize:11,color:C.grayLight,letterSpacing:"0.5px"}}>{ACADEMY_SUB} · 제품 갤러리</span>
-        </div>
-      </div>
+      // 푸터
+      React.createElement("div",{style:{marginTop:"2.5rem",paddingTop:"1.5rem",borderTop:"1px solid "+C.line,display:"flex",alignItems:"center",justifyContent:"space-between"}},
+        React.createElement("img",{src:LOGO_B64,alt:"로고",style:{height:24,objectFit:"contain",opacity:0.4}}),
+        React.createElement("span",{style:{fontSize:11,color:C.grayLight}},"FIRST BARISTA & BAKING · 제품 갤러리")
+      )
+    ),
 
-      {/* ══ 라이트박스 ════════════════════════════════════ */}
-      {lightboxImg&&(
-        <div onClick={()=>setLightboxIdx(null)}
-          style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:"1rem"}}>
-          {lightboxIdx>0&&(
-            <button onClick={e=>{e.stopPropagation();goLightbox(-1);}}
-              style={{position:"absolute",left:16,top:"50%",transform:"translateY(-50%)",width:42,height:42,
-                background:"rgba(255,255,255,0.12)",border:`1px solid rgba(255,255,255,0.3)`,
-                color:"#fff",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-              <i className="ti ti-chevron-left" aria-hidden="true"/>
-            </button>
-          )}
-          {lightboxIdx<filtered.length-1&&(
-            <button onClick={e=>{e.stopPropagation();goLightbox(1);}}
-              style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",width:42,height:42,
-                background:"rgba(255,255,255,0.12)",border:`1px solid rgba(255,255,255,0.3)`,
-                color:"#fff",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-              <i className="ti ti-chevron-right" aria-hidden="true"/>
-            </button>
-          )}
-          <div onClick={e=>e.stopPropagation()}
-            style={{maxWidth:600,width:"100%",background:C.white,overflow:"hidden"}}>
-            <div style={{height:3,background:`linear-gradient(to right,${C.coral},${C.gold})`}}/>
-            <img src={lightboxImg.data} alt={lightboxImg.name}
-              style={{width:"100%",maxHeight:380,objectFit:"contain",display:"block",background:"#111"}}/>
-            <div style={{padding:"14px 18px"}}>
-              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
-                <div>
-                  <p style={{fontSize:14,fontWeight:700,margin:"0 0 3px",color:C.black}}>{getTeacherName(lightboxImg.teacherId)}</p>
-                  <p style={{fontSize:11,color:C.grayMid,margin:0}}>
-                    {lightboxImg.name} · {lightboxImg.uploadedAt} · {lightboxIdx+1}/{filtered.length}
-                    {lightboxImg.width?` · ${lightboxImg.width}×${lightboxImg.height}`:""}
-                  </p>
-                </div>
-                <button onClick={e=>cycleStatus(lightboxImg.id,e)}
-                  style={{fontSize:11,padding:"4px 12px",cursor:"pointer",fontWeight:700,
-                    background:statusMap[lightboxImg.useStatus||"unused"].id==="used"?"#fff1ee":statusMap[lightboxImg.useStatus||"unused"].id==="pending"?"#fff8e8":C.bg,
-                    border:`1.5px solid ${statusMap[lightboxImg.useStatus||"unused"].color}`,
-                    color:statusMap[lightboxImg.useStatus||"unused"].color}}>
-                  {lightboxImg.useStatus==="used"?"✅ 사용완료":lightboxImg.useStatus==="pending"?"🔖 사용예정":"📷 미사용"}
-                </button>
-              </div>
-              <div style={{marginBottom:12}}>
-                <p style={{fontSize:11,color:C.grayMid,margin:"0 0 5px",fontWeight:600}}>📝 블로그 메모</p>
-                <input defaultValue={lightboxImg.blogNote||""} placeholder="예: 3월 크루아상 수업, 1번 포스팅 사용"
-                  onBlur={e=>saveBlogNote(lightboxImg.id,e.target.value)}
-                  onClick={e=>e.stopPropagation()}
-                  style={{width:"100%",fontSize:12,padding:"7px 10px",
-                    border:`1px solid ${C.line}`,outline:"none",boxSizing:"border-box",color:C.black}}/>
-              </div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>handleDownloadSingle(lightboxImg)}
-                  style={{flex:1,fontSize:13,padding:"8px",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-                    background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:600}}>
-                  <i className="ti ti-download" style={{fontSize:14}} aria-hidden="true"/> 다운로드
-                </button>
-                <button onClick={()=>setLightboxIdx(null)}
-                  style={{fontSize:13,padding:"8px 14px",background:C.bg,color:C.gray,border:`1px solid ${C.line}`,cursor:"pointer"}}>
-                  <i className="ti ti-x" style={{fontSize:15}} aria-hidden="true"/>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    // 라이트박스
+    lightboxImg&&React.createElement("div",{onClick:()=>setLightboxIdx(null),
+      style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.93)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:"1rem"}},
+      lightboxIdx>0&&React.createElement("button",{onClick:e=>{e.stopPropagation();goLightbox(-1);},
+        style:{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",width:44,height:44,
+          background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.3)",
+          color:"#fff",fontSize:22,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},"‹"),
+      lightboxIdx<filtered.length-1&&React.createElement("button",{onClick:e=>{e.stopPropagation();goLightbox(1);},
+        style:{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",width:44,height:44,
+          background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.3)",
+          color:"#fff",fontSize:22,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},"›"),
+      React.createElement("div",{onClick:e=>e.stopPropagation(),style:{maxWidth:560,width:"100%",background:C.white,overflow:"hidden"}},
+        React.createElement("div",{style:{height:3,background:"linear-gradient(to right,"+C.coral+","+C.gold+")"}}),
+        React.createElement("img",{src:lightboxImg.data,alt:lightboxImg.name,style:{width:"100%",maxHeight:360,objectFit:"contain",display:"block",background:"#111"}}),
+        React.createElement("div",{style:{padding:"14px 16px"}},
+          React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}},
+            React.createElement("div",null,
+              React.createElement("p",{style:{fontSize:14,fontWeight:700,margin:"0 0 3px",color:C.black}},getTeacherName(lightboxImg.teacherId)),
+              React.createElement("p",{style:{fontSize:11,color:C.grayMid,margin:0}},lightboxImg.uploadedAt+" · "+(lightboxIdx+1)+"/"+filtered.length)
+            ),
+            React.createElement("button",{onClick:e=>cycleStatus(lightboxImg.id,e),
+              style:{fontSize:11,padding:"5px 12px",cursor:"pointer",fontWeight:700,
+                background:lightboxImg.useStatus==="used"?"#fff1ee":lightboxImg.useStatus==="pending"?"#fff8e8":C.bg,
+                border:"1.5px solid "+statusMap[lightboxImg.useStatus||"unused"].color,
+                color:statusMap[lightboxImg.useStatus||"unused"].color}},
+              lightboxImg.useStatus==="used"?"✅ 사용완료":lightboxImg.useStatus==="pending"?"🔖 사용예정":"📷 미사용")
+          ),
+          React.createElement("p",{style:{fontSize:11,color:C.grayMid,margin:"0 0 5px",fontWeight:600}},"📝 블로그 메모"),
+          React.createElement("input",{defaultValue:lightboxImg.blogNote||"",placeholder:"예: 3월 크루아상 수업, 1번 포스팅 사용",
+            onBlur:e=>saveBlogNote(lightboxImg.id,e.target.value),
+            onClick:e=>e.stopPropagation(),
+            style:{width:"100%",fontSize:12,padding:"7px 10px",border:"1px solid "+C.line,outline:"none",boxSizing:"border-box",marginBottom:12}}),
+          React.createElement("div",{style:{display:"flex",gap:8}},
+            React.createElement("button",{onClick:()=>handleDownloadSingle(lightboxImg),
+              style:{flex:1,fontSize:13,padding:"9px",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+                background:C.coral,color:"#fff",border:"none",cursor:"pointer",fontWeight:700}},
+              "⬇ 다운로드"),
+            React.createElement("button",{onClick:()=>setLightboxIdx(null),
+              style:{fontSize:13,padding:"9px 16px",background:C.bg,color:C.gray,border:"1px solid "+C.line,cursor:"pointer"}},
+              "✕")
+          )
+        )
+      )
+    )
   );
-}  
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+  </script>
+</body>
+</html>
