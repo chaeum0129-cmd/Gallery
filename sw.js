@@ -1,29 +1,16 @@
-const CACHE_NAME = 'first-gallery-v1';
-const urlsToCache = [
-  '/first-gallery/',
-  '/first-gallery/index.html',
-  '/first-gallery/static/js/main.chunk.js',
-  '/first-gallery/static/css/main.chunk.css',
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache).catch(() => {}))
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
+const CACHE='first-gallery-v3';
+self.addEventListener('install',(e)=>{self.skipWaiting();});
+self.addEventListener('activate',(e)=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
   self.clients.claim();
 });
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request).catch(() => caches.match('/first-gallery/')))
+self.addEventListener('fetch',(e)=>{
+  if(e.request.method!=='GET') return;
+  if(e.request.url.includes('firestore.googleapis.com')) return;
+  e.respondWith(
+    caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+      if(res.ok){const c=res.clone();caches.open(CACHE).then(cache=>cache.put(e.request,c));}
+      return res;
+    }).catch(()=>caches.match('/Gallery/')))
   );
 });
