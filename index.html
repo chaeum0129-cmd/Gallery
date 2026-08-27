@@ -284,18 +284,19 @@ function App(){
       +"- 자연스럽고 읽기 쉬운 문체\n"
       +"- 마지막에 학원 소개 및 문의 유도 문구 포함";
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
+      const res=await fetch("/.netlify/functions/claude",{
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          model:"claude-sonnet-4-6",
-          max_tokens:2000,
-          messages:[{role:"user",content:prompt}]
+          prompt:blogTopic,
+          style:blogStyle,
+          length:blogLength,
+          keywords:blogKeywords
         })
       });
       const data=await res.json();
-      if(data.error){setBlogError("API 오류: "+data.error.message);}
-      else{setBlogResult(data.content[0].text);}
+      if(data.error){setBlogError("오류: "+data.error);}
+      else{setBlogResult(data.result);}
     }catch(e){setBlogError("오류가 발생했어요: "+e.message);}
     setBlogLoading(false);
   };
